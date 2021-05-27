@@ -1,31 +1,76 @@
-// Formats response to look presentable on webpage
-const renderResponse = (res) => {
-  // handles if res is falsey
-  if(!res){
-    console.log(res.status)
-  }
-  // in case res comes back as a blank array
-  if(!res.length){
-    responseField.innerHTML = "<p>Try again!</p><p>There were no suggestions found!</p>"
-    return
-  }
+// NOTE: wordSmith functions from lines 4 - 39
+// NOTE: byteSize functions from lines 41 - 76 (remember to add your API key!)
 
-  // creating an array to contain the HTML strings
-  let wordList = []
-  // looping through the response and maxxing out at 10
-  for(let i = 0; i < Math.min(res.length, 10); i++){
-    // creating a list of words
-    wordList.push(`<li>${res[i].word}</li>`)
-  }
-  // joins the array of HTML strings into one string
-  wordList = wordList.join("")
+// information to reach API
+const dataMuseUrl = 'https://api.datamuse.com/words?';
+const queryParams = 'rel_jjb=';
 
-  // manipulates responseField to render the modified response
-  responseField.innerHTML = `<p>You might be interested in:</p><ol>${wordList}</ol>`
-  return
+// selecting page elements
+const inputField = document.querySelector('#input');
+const submit = document.querySelector('#submit');
+const responseField = document.querySelector('#responseField');
+
+// AJAX function
+const getSuggestions = () => {
+  const wordQuery = inputField.value;
+  const endPoint = dataMuseUrl + queryParams + wordQuery;
+
+  const xhr = new XMLHttpRequest();
+  xhr.responseType = 'json';
+
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      renderWordResponse(xhr.response);
+    }
+  };
+  xhr.open('GET', endPoint);
+  xhr.send();
 }
 
-// Renders response before it is modified
-const renderRawResponse = (res) => {
-  // taking the first 10 words from res
-  let trimmedResponse = res.slice(0
+// clear previous results and display results to webpage
+const displaySuggestions = (event) => {
+  event.preventDefault();
+  while(responseField.firstChild){
+    responseField.removeChild(responseField.firstChild);
+  };
+  getSuggestions();
+};
+
+submit.addEventListener('click', displaySuggestions);
+
+// information to reach Rebrandly API
+const apiKey = '<Your API Key>';
+const rebrandlyUrl = 'https://api.rebrandly.com/v1/links';
+
+// element selector
+const shortenButton = document.querySelector('#shorten');
+
+// AJAX functions
+const shortenUrl = () => {
+  const urlToShorten = inputField.value;
+  const data = JSON.stringify({destination: urlToShorten});
+
+  const xhr = new XMLHttpRequest();
+  xhr.responseType = 'json';
+
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      renderByteResponse(xhr.response);
+    }
+  };
+  xhr.open('POST', rebrandlyUrl);
+  xhr.setRequestHeader('Content-type', 'application/json');
+	xhr.setRequestHeader('apikey', apiKey);
+  xhr.send(data);
+}
+
+// Clear page and call AJAX functions
+const displayShortUrl = (event) => {
+  event.preventDefault();
+  while(responseField.firstChild){
+    responseField.removeChild(responseField.firstChild);
+  };
+  shortenUrl();
+};
+
+shortenButton.addEventListener('click', displayShortUrl);
